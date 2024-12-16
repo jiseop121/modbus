@@ -45,10 +45,11 @@ type rtuPackager struct {
 }
 
 // Encode encodes PDU in a RTU frame:
-//  Slave Address   : 1 byte
-//  Function        : 1 byte
-//  Data            : 0 up to 252 bytes
-//  CRC             : 2 byte
+//
+//	Slave Address   : 1 byte
+//	Function        : 1 byte
+//	Data            : 0 up to 252 bytes
+//	CRC             : 2 byte
 func (mb *rtuPackager) Encode(pdu *ProtocolDataUnit) (adu []byte, err error) {
 	length := len(pdu.Data) + 4
 	if length > rtuMaxSize {
@@ -63,7 +64,7 @@ func (mb *rtuPackager) Encode(pdu *ProtocolDataUnit) (adu []byte, err error) {
 
 	// Append crc
 	var crc crc
-	crc.reset().pushBytes(adu[0 : length-2])
+	crc.reset().calculateCRC16(adu[0 : length-2])
 	checksum := crc.value()
 
 	adu[length-1] = byte(checksum >> 8)
@@ -92,7 +93,7 @@ func (mb *rtuPackager) Decode(adu []byte) (pdu *ProtocolDataUnit, err error) {
 	length := len(adu)
 	// Calculate checksum
 	var crc crc
-	crc.reset().pushBytes(adu[0 : length-2])
+	crc.reset().calculateCRC16(adu[0 : length-2])
 	checksum := uint16(adu[length-1])<<8 | uint16(adu[length-2])
 	if checksum != crc.value() {
 		err = fmt.Errorf("modbus: response crc '%v' does not match expected '%v'", checksum, crc.value())
