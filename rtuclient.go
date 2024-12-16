@@ -64,8 +64,8 @@ func (mb *rtuPackager) Encode(pdu *ProtocolDataUnit) (adu []byte, err error) {
 
 	// Append crc
 	var crc crc
-	crc.reset().calculateCRC16(adu[0 : length-2])
-	checksum := crc.value()
+	crc.reset().pushBytes(adu[0 : length-2])
+	checksum := crc.crc16()
 
 	adu[length-1] = byte(checksum >> 8)
 	adu[length-2] = byte(checksum)
@@ -93,9 +93,9 @@ func (mb *rtuPackager) Decode(adu []byte) (pdu *ProtocolDataUnit, err error) {
 	length := len(adu)
 	// Calculate checksum
 	var crc crc
-	crc.reset().calculateCRC16(adu[0 : length-2])
+	crc.reset().pushBytes(adu[0 : length-2])
 	checksum := uint16(adu[length-1])<<8 | uint16(adu[length-2])
-	if checksum != crc.value() {
+	if checksum != crc.crc16() {
 		err = fmt.Errorf("modbus: response crc '%v' does not match expected '%v'", checksum, crc.value())
 		return
 	}

@@ -71,27 +71,20 @@ func (crc *crc) value() uint16 {
 	return uint16(crc.high)<<8 | uint16(crc.low)
 }
 
-func (crc *crc) calculateCRC16(data []byte) *crc {
-	// 초기화
-	crc.reset()
+func (crc *crc) crc16() uint16 {
+	c := uint16(0xFFFF)
 
-	// CRC 계산 루프
+	// high와 low 값을 사용하여 계산
+	data := []byte{crc.high, crc.low} // high와 low를 결합하여 데이터로 처리
 	for _, b := range data {
-		crc.low ^= b // XOR 연산
+		c ^= uint16(b)
 		for i := 0; i < 8; i++ {
-			// 현재 CRC 값을 16비트로 결합
-			combined := uint16(crc.high)<<8 | uint16(crc.low)
-			if combined&0x0001 != 0 {
-				// LSB가 1이면 다항식 XOR
-				combined = (combined >> 1) ^ 0xA001
+			if (c & 0x0001) != 0 {
+				c = (c >> 1) ^ 0xA001
 			} else {
-				// LSB가 0이면 오른쪽으로 쉬프트
-				combined >>= 1
+				c >>= 1
 			}
-			// 업데이트된 CRC 값을 다시 high와 low로 분리
-			crc.high = byte(combined >> 8)
-			crc.low = byte(combined & 0xFF)
 		}
 	}
-	return crc
+	return c
 }
