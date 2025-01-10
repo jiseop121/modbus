@@ -102,7 +102,7 @@ func (mb *rtuPackager) Decode(adu []byte) (pdu *ProtocolDataUnit, err error) {
 	// Function code & data
 	pdu = &ProtocolDataUnit{}
 	pdu.FunctionCode = adu[1]
-	pdu.Data = adu[2 : length-2]
+	pdu.Data = adu[3 : length-2]
 	return
 }
 
